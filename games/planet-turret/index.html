@@ -258,7 +258,7 @@ function buildSky(L){SKY=CONSTELLATIONS.map(c=>({name:c.name,lines:c.lines,stars
 
 let G;
 const MAX_LIVES=5;
-/* timed: 교실 판(교사가 시작한 10~15분 경기). 생명이 다 닳으면 탈락 대신 수리 후 계속, 장소마다 시간 상한이 있어
+/* timed: 교실 판(교사가 시작한 3·5·8분 경기). 생명이 다 닳으면 탈락 대신 수리 후 계속, 장소마다 시간 상한이 있어
    판 안에 6곳을 모두 거친다. timed 가 아니면(혼자 하기·연습) 예전처럼 생명이 다 닳으면 끝. */
 function newGame(opts={}){G={score:0,combo:1,lastHit:-9,lives:MAX_LIVES,lvlIdx:0,loop:0,kills:0,t:0,R:I3(),P:null,enemies:[],fx:[],pops:[],shells:[],smoke:[],
   spawnT:.6,over:false,boss:null,powerT:0,hideMsgT:0,cool:0,side:0,recoil:[0,0],flashT:[0,0],aim:-Math.PI/2,tipShown:false,
@@ -267,8 +267,10 @@ const lvl=()=>LEVELS[G.lvlIdx];
 const diff=()=>G.loop*LEVELS.length+G.lvlIdx;
 const KILLS_TIMED=10;
 const killsNeed=()=>G.timed?KILLS_TIMED:KILLS_TO_BOSS;
-/* 한 장소에 쓸 수 있는 시간(초): 판 시간의 80%를 6곳에 나눈다 → 10분 80초, 12분 96초, 15분 120초 */
-const levelBudget=()=>Math.max(60,S.durMs/1000*0.8/LEVELS.length);
+/* 한 장소에 쓸 수 있는 시간(초): 판 시간의 80%를 6곳에 나눈다 → 3분 24초, 5분 40초, 8분 64초 */
+const levelBudget=()=>Math.max(20,S.durMs/1000*0.8/LEVELS.length);
+/* 시간 초과로 다음 장소로 가기 전에 빌런을 잡을 시간(초): 기본 25초, 짧은 판에서는 장소 시간의 45% */
+const bossGrace=()=>Math.min(25,levelBudget()*.45);
 const FEVER_MS=60000;
 const fever=()=>G.timed&&S.state==='run'&&remainMs()<=FEVER_MS&&remainMs()>0;
 const mult=()=>fever()?2:1;
@@ -394,7 +396,7 @@ function frame(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
     // 빌런 등장: 악당을 충분히 잡았거나, 교실 판에서는 이 장소 시간의 절반 남짓이 지나면
     if(!G.boss&&!G.bossDone&&G.nextT<=0&&(G.kills>=killsNeed()||(G.timed&&G.lvlT>=levelBudget()*.55)))spawnBoss();
     // 장소 시간 초과: 다음 장소로 출동(빌런은 스스로 움직이지 않으므로 "도망"이 아니라 포탑이 떠난다)
-    if(G.timed&&!G.bossDone&&G.lvlT>=levelBudget()&&(!G.boss||G.boss.age>=25)){G.boss=null;G.bossDone=true;G.nextT=1.6;
+    if(G.timed&&!G.bossDone&&G.lvlT>=levelBudget()&&(!G.boss||G.boss.age>=bossGrace())){G.boss=null;G.bossDone=true;G.nextT=1.6;
       showBanner('시간 초과!','포탑이 다음 장소로 출동해요.');tone(440,220,.3,'triangle',.07);}
     if(fever()&&!G.feverShown){G.feverShown=true;showBanner('피버 타임!','마지막 1분 · 모든 점수 ×2',true);jingle();}
     for(const sh of [...G.shells]){sh.t+=dt;if(sh.t>=FLIGHT){G.shells.splice(G.shells.indexOf(sh),1);resolve(sh);}}
@@ -589,7 +591,7 @@ function drawMini(){const w=mini.width/DPR,h=mini.height/DPR;mctx.setTransform(D
    MODE: solo(파일로 열기) | join(입장 화면) | practice(판 시작 전 연습) | ranked(판 진행) | ended(판 끝) */
 const NET=(document.querySelector('meta[name="pt-server"]')||{}).content==='1';
 let MODE='solo';
-const S={state:'idle',round:0,durMs:12*60000,left:0,startAt:0,deadline:0,rank:0,total:0,gotResult:false};
+const S={state:'idle',round:0,durMs:5*60000,left:0,startAt:0,deadline:0,rank:0,total:0,gotResult:false};
 function remainMs(){const now=performance.now();
   if(S.state==='run')return now<S.startAt?S.left:Math.max(0,S.deadline-now);
   if(S.state==='pause')return S.left;return 0;}

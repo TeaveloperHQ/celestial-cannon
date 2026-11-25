@@ -8,7 +8,7 @@
 | 경로 | 내용 | 상태 |
 |---|---|---|
 | `games/planet-turret/index.html` | **행성 포탑 방어전**: 자전하는 행성 위 포탑에서 악당·빌런을 대공포로 쏘는 아케이드 게임. 레벨마다 위도와 보는 방향이 바뀜 | 메인, 개발 중 |
-| `games/planet-turret/*.go` | **교실 서버**: QR 접속 · 10~15분 판 · 실시간 순위 · 결과 엑셀 (vector-soccer 와 같은 구조). 선생님용 [MANUAL.md](games/planet-turret/MANUAL.md) | 메인 |
+| `games/planet-turret/*.go` | **교실 서버**: QR 접속 · 3·5·8분 판 · 실시간 순위 · 결과 엑셀 (vector-soccer 와 같은 구조). 선생님용 [MANUAL.md](games/planet-turret/MANUAL.md) | 메인 |
 | `prototypes/my-stellarium/index.html` | **나만의 스텔라리움**: 빈칸 3개(회전축·방향·각도)를 골라 하늘을 움직이는 수업 도구 | 보류된 시안 |
 | `docs/research.md` | 활동·연구 조사 결과와 출처 | 참고 |
 | `docs/lesson-design.md` | 중위도 일주운동 지도 방법, 수업안, 검토했던 아이디어들 | 참고 |

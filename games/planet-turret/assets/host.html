@@ -188,7 +188,7 @@
         <div class="ctrl">
           <div>
             <span class="phase idle" id="phase">대기 · 학생은 연습 중</span>
-            <div class="clock" id="clock">12:00</div>
+            <div class="clock" id="clock">5:00</div>
           </div>
           <div class="acts" id="acts"></div>
         </div>
@@ -305,8 +305,10 @@ function fillQrPlayers() {
 }
 
 // ── WebSocket ────────────────────────────────────────────
-let ws = null, sess = { state: 'idle', round: 0, remainMs: 0, durMs: 720000 }, players = [];
-let pickMin = +(localStorage.getItem('pt_min') || 12), lastSaved = '';
+let ws = null, sess = { state: 'idle', round: 0, remainMs: 0, durMs: 300000 }, players = [];
+const MINUTES = [3, 5, 8];
+let pickMin = +(localStorage.getItem('pt_min') || 5), lastSaved = '';
+if (!MINUTES.includes(pickMin)) pickMin = 5; // 예전 10·12·15분 선택이 남아 있으면 기본값으로
 function connect() {
   ws = new WebSocket(`ws://${location.host}/ws?role=host`);
   ws.onopen = () => { $('#conn').textContent = '서버 연결됨'; $('#conn').className = 'status'; };
@@ -329,7 +331,7 @@ function renderActs() {
   const a = $('#acts');
   const s = sess.state;
   if (s === 'idle' || (s === 'end' && sess.final)) {
-    a.innerHTML = `<div class="seg" id="seg">${[10, 12, 15].map((m) => `<button data-m="${m}" class="${m === pickMin ? 'on' : ''}">${m}분</button>`).join('')}</div>
+    a.innerHTML = `<div class="seg" id="seg">${MINUTES.map((m) => `<button data-m="${m}" class="${m === pickMin ? 'on' : ''}">${m}분</button>`).join('')}</div>
       <button class="btn brand big" id="startBtn">${ICONS.play}${s === 'end' ? '새 판 시작' : '판 시작'}</button>` +
       (s === 'end' ? `<a class="btn ghost" id="csvNow" href="/api/result.csv?f=${encodeURIComponent(sess.saved || '')}">${ICONS.down}이번 판 엑셀</a>
       <button class="btn ghost" id="resetBtn">연습으로 돌아가기</button>` : '');

@@ -154,7 +154,7 @@ func newHub() *Hub {
 		inbound:    make(chan inMsg, 256),
 		hosts:      map[*client]bool{},
 		players:    map[string]*Player{},
-		sess:       Session{State: "idle", Dur: 12 * time.Minute},
+		sess:       Session{State: "idle", Dur: 5 * time.Minute},
 		now:        time.Now,
 		save:       saveResult,
 	}
@@ -360,7 +360,7 @@ func (h *Hub) startSession(min int) {
 		return // 집계 중
 	}
 	if min < minMinutes || min > maxMinutes {
-		min = 12
+		min = 5
 	}
 	now := h.now()
 	h.sess = Session{
