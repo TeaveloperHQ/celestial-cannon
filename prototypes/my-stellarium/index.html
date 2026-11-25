@@ -1,0 +1,309 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나만의 스텔라리움</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one rule block with three blanks on the left, a Stellarium-like dome on the right. One deliberate night look. */
+:root{
+  --night:#060914;
+  --panel:#0d1322;
+  --panel-2:#131b2f;
+  --line:#25304b;
+  --text:#e7ecf6;
+  --muted:#8d9ab6;
+  --gold:#ffd27a;
+  --ok:#5fd39a;
+  --warn:#ffad5c;
+  --block:#d97a3c;
+  --f-display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--night);color:var(--text);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 24px;box-sizing:border-box}
+*{box-sizing:border-box}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:12px}
+.top h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;color:var(--gold)}
+.top p{margin:0;color:var(--muted);font-size:14px}
+
+.grid{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:20px;margin:0 0 8px}
+
+.facts ol{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.facts li{display:flex;gap:8px;align-items:flex-start}
+.num{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);font-weight:600;font-size:13px;margin-top:1px}
+
+.rule{background:var(--block);color:#fff;border-radius:12px;padding:14px 14px 16px;font-weight:600;font-size:17px;line-height:2.3;box-shadow:inset 0 -4px 0 rgba(0,0,0,.22)}
+.rule select{background:#fff;color:#151a26;border:0;border-radius:14px;padding:3px 10px;font-weight:600;font-size:16px;cursor:pointer}
+.rule .tag{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.25);font-size:12px;vertical-align:2px;margin-left:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.run{background:var(--ok);border-color:var(--ok);color:#06210f;font-size:17px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:14px;color:var(--muted)}
+.opts label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.opts input{accent-color:var(--gold);width:16px;height:16px}
+
+.feedback strong{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;margin-bottom:2px}
+.feedback.ok{border-color:var(--ok)}.feedback.ok strong{color:var(--ok)}
+.feedback.warn{border-color:var(--warn)}.feedback.warn strong{color:var(--warn)}
+.feedback .think{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--gold)}
+
+.sky-wrap{position:relative;height:min(74vh,700px);min-height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#000}
+@media (max-width:900px){.sky-wrap{height:58vh}.sky-col{order:-1}}
+#sky{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.hud{position:absolute;left:12px;top:10px;display:flex;flex-direction:column;gap:2px;pointer-events:none;text-shadow:0 1px 3px #000}
+#clock{font-family:var(--f-mono);font-size:20px;color:var(--gold);font-variant-numeric:tabular-nums}
+#viewlabel{font-size:14px}
+.dirbar{position:absolute;right:10px;bottom:10px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.dirbar button{background:rgba(6,9,20,.78);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600;font-size:14px}
+.dirbar button[aria-pressed=true]{border-color:var(--gold);color:var(--gold)}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>나만의 스텔라리움</h1>
+    <p>빈칸 세 개를 골라 실제 밤하늘처럼 움직이게 만들어요 · 서울, 11월 25일 오후 6시</p>
+  </header>
+
+  <main class="grid">
+    <div class="side">
+      <section class="card facts">
+        <h2>실제 밤하늘에서 본 것</h2>
+        <ol>
+          <li><span class="num">1</span><span>북극성은 밤새 거의 움직이지 않는다.</span></li>
+          <li><span class="num">2</span><span>별은 동쪽에서 떠서 서쪽으로 진다.</span></li>
+          <li><span class="num">3</span><span>북두칠성은 6시간 동안 90° 돌았다.</span></li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <h2>하늘이 움직이는 규칙</h2>
+        <div class="rule">
+          1시간마다 천구를
+          <select id="axis" aria-label="회전 중심">
+            <option value="zenith">머리 위</option>
+            <option value="pole">북극성</option>
+            <option value="south">남쪽 지평선</option>
+          </select><span class="tag">1</span>
+          을 중심으로
+          <select id="dir" aria-label="돌리는 방향">
+            <option value="we">서쪽 → 동쪽</option>
+            <option value="ew">동쪽 → 서쪽</option>
+          </select><span class="tag">2</span>
+          으로
+          <select id="deg" aria-label="1시간에 돌리는 각도">
+            <option value="5">5°</option>
+            <option value="10">10°</option>
+            <option value="15">15°</option>
+            <option value="30" selected>30°</option>
+            <option value="45">45°</option>
+          </select><span class="tag">3</span>
+          씩 돌린다.
+        </div>
+        <div class="actions">
+          <button class="btn run" id="runBtn" type="button">▶ 6시간 돌려 보기</button>
+          <button class="btn" id="resetBtn" type="button">처음 하늘로</button>
+        </div>
+        <div class="opts">
+          <label for="trail"><input type="checkbox" id="trail" checked> 별이 지나간 자취 보기</label>
+          <label for="compare"><input type="checkbox" id="compare"> 실제 하늘 별자리 겹쳐 보기 (점선)</label>
+        </div>
+      </section>
+
+      <section class="card feedback" id="feedback" aria-live="polite"></section>
+    </div>
+
+    <section class="sky-col" aria-label="하늘">
+      <div class="sky-wrap">
+        <canvas id="sky" aria-label="하늘. 끌어서 둘러볼 수 있어요."></canvas>
+        <div class="hud"><span id="clock"></span><span id="viewlabel"></span></div>
+        <div class="dirbar" id="dirbar">
+          <button type="button" data-az="0">북</button>
+          <button type="button" data-az="90">동</button>
+          <button type="button" data-az="180">남</button>
+          <button type="button" data-az="270">서</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(()=>{
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const LAT=37.5*D2R;
+const POLE=[0,Math.cos(LAT),Math.sin(LAT)];      // local frame: x=East, y=North, z=Up
+const MER=[0,-Math.sin(LAT),Math.cos(LAT)];
+const WEST=[-1,0,0];
+const THETA0=325.5;                               // local sidereal angle (deg) at 18:00 KST, 2026-11-25, Seoul
+const AXES={pole:POLE,zenith:[0,0,1],south:[0,-1,0]};
+
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const I3=()=>[1,0,0,0,1,0,0,0,1];
+function rotMat(k,a){const c=Math.cos(a),s=Math.sin(a),t=1-c,[x,y,z]=k;
+  return [t*x*x+c,t*x*y-s*z,t*x*z+s*y, t*x*y+s*z,t*y*y+c,t*y*z-s*x, t*x*z-s*y,t*y*z+s*x,t*z*z+c];}
+function mul(A,B){const C=new Array(9);for(let i=0;i<3;i++)for(let j=0;j<3;j++)C[i*3+j]=A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j];return C;}
+const ap=(R,v)=>[R[0]*v[0]+R[1]*v[1]+R[2]*v[2],R[3]*v[0]+R[4]*v[1]+R[5]*v[2],R[6]*v[0]+R[7]*v[1]+R[8]*v[2]];
+function eqVec(raH,decD){const H=(THETA0-raH*15)*D2R,d=decD*D2R,c=Math.cos(d);
+  return [0,1,2].map(i=>MER[i]*c*Math.cos(H)+WEST[i]*c*Math.sin(H)+POLE[i]*Math.sin(d));}
+
+/* star catalogue (J2000, approximate) */
+const NAMED=[
+ ['polaris',2.53,89.26,2.0],
+ ['dubhe',11.06,61.75,1.8],['merak',11.03,56.38,2.3],['phecda',11.90,53.69,2.4],['megrez',12.26,57.03,3.3],['alioth',12.90,55.96,1.8],['mizar',13.40,54.93,2.2],['alkaid',13.79,49.31,1.9],
+ ['caph',0.15,59.15,2.3],['schedar',0.68,56.54,2.2],['gcas',0.95,60.72,2.4],['ruchbah',1.43,60.24,2.7],['segin',1.91,63.67,3.4],
+ ['betelgeuse',5.92,7.41,0.5,'#ffb38a'],['rigel',5.24,-8.20,0.1,'#cfe0ff'],['bellatrix',5.42,6.35,1.6],['saiph',5.80,-9.67,2.1],['alnitak',5.68,-1.94,1.8],['alnilam',5.60,-1.20,1.7],['mintaka',5.53,-0.30,2.2],
+ ['kochab',14.85,74.16,2.1],['pherkad',15.35,71.83,3.0],
+ ['sirius',6.75,-16.72,-1.4,'#dfe9ff'],['vega',18.62,38.78,0.0,'#dfe9ff'],['deneb',20.69,45.28,1.3],['altair',19.85,8.87,0.8],['capella',5.28,46.0,0.1,'#fff1c4'],
+ ['aldebaran',4.6,16.5,0.9,'#ffbe8f'],['arcturus',14.26,19.18,0.0,'#ffd0a0'],['spica',13.42,-11.16,1.0],['regulus',10.14,11.97,1.4],['antares',16.49,-26.43,1.0,'#ff9f80'],
+ ['procyon',7.66,5.22,0.4],['pollux',7.76,28.03,1.1,'#ffdcae'],['castor',7.58,31.89,1.6],['fomalhaut',22.96,-29.62,1.2],
+ ['alpheratz',0.14,29.09,2.1],['mirach',1.16,35.62,2.1],['almach',2.07,42.33,2.1],['markab',23.08,15.2,2.5],['scheat',23.06,28.08,2.4],['algenib',0.22,15.18,2.8]
+];
+const LINES=[
+ ['alkaid','mizar'],['mizar','alioth'],['alioth','megrez'],['megrez','phecda'],['phecda','merak'],['merak','dubhe'],['dubhe','megrez'],
+ ['caph','schedar'],['schedar','gcas'],['gcas','ruchbah'],['ruchbah','segin'],
+ ['betelgeuse','bellatrix'],['bellatrix','mintaka'],['betelgeuse','alnitak'],['mintaka','alnilam'],['alnilam','alnitak'],['mintaka','rigel'],['alnitak','saiph'],
+ ['vega','deneb'],['deneb','altair'],['altair','vega'],
+ ['alpheratz','scheat'],['scheat','markab'],['markab','algenib'],['algenib','alpheratz'],['alpheratz','mirach'],['mirach','almach'],
+ ['polaris','kochab'],['kochab','pherkad']
+];
+const LABELS=[['megrez','북두칠성'],['gcas','카시오페이아'],['alnilam','오리온'],['altair','여름철 대삼각형'],['scheat','페가수스']];
+
+let seed=20261125;
+const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const stars=[];const byName={};
+for(const [n,ra,dec,mag,col] of NAMED){const s={base:eqVec(ra,dec),mag,col:col||'#fff8ec'};stars.push(s);byName[n]=s;}
+for(let i=0;i<360;i++){const z=2*rnd()-1,ra=24*rnd();const mag=3.4+Math.pow(rnd(),0.6)*2.4;
+  const tint=rnd();stars.push({base:eqVec(ra,Math.asin(z)*R2D),mag,col:tint<.15?'#ffe2c0':tint<.3?'#d8e4ff':'#f4f6ff'});}
+
+/* sky state */
+const S={R:I3(),clock:0};
+let trails=new Map();
+const pos=s=>ap(S.R,s.base);
+function recordTrail(){for(const s of stars){if(s.mag>4.6)continue;let t=trails.get(s);if(!t){t=[];trails.set(s,t);}t.push(pos(s));}}
+function resetSky(){S.R=I3();S.clock=0;trails=new Map();recordTrail();}
+
+/* run */
+let running=false,abort=false;
+const axisEl=document.getElementById('axis'),dirEl=document.getElementById('dir'),degEl=document.getElementById('deg');
+const runBtn=document.getElementById('runBtn'),resetBtn=document.getElementById('resetBtn');
+function animateHour(axis,deg){const steps=Math.round(Math.abs(deg)),sign=Math.sign(deg),dur=700,from=S.clock;
+  return new Promise(res=>{let done=0;const t0=performance.now();
+    const tick=now=>{if(abort)return res();const k=Math.min(1,(now-t0)/dur);const target=Math.floor(k*steps);
+      while(done<target){S.R=mul(rotMat(axis,sign*D2R),S.R);done++;if(done%2===0)recordTrail();}
+      S.clock=from+k;if(k<1)requestAnimationFrame(tick);else{recordTrail();res();}};
+    requestAnimationFrame(tick);});}
+async function run(){if(running)return;running=true;abort=false;resetSky();
+  runBtn.disabled=true;for(const el of [axisEl,dirEl,degEl])el.disabled=true;
+  setFb('idle','하늘이 움직이는 중…','6시간 동안 하늘이 어떻게 움직이는지 지켜보세요. 방향 버튼으로 다른 쪽 하늘도 볼 수 있어요.');
+  const axis=AXES[axisEl.value],deg=(dirEl.value==='ew'?-1:1)*(+degEl.value);
+  for(let h=0;h<6&&!abort;h++)await animateHour(axis,deg);
+  running=false;runBtn.disabled=false;for(const el of [axisEl,dirEl,degEl])el.disabled=false;
+  if(!abort)evaluate();}
+resetBtn.addEventListener('click',()=>{abort=true;setTimeout(()=>{resetSky();setFb('idle','오후 6시 하늘로 돌아왔어요',START_MSG);},30);});
+runBtn.addEventListener('click',run);
+
+/* feedback: one blank at a time */
+const fbEl=document.getElementById('feedback');
+const START_MSG='위 세 가지 관측 사실을 보고 빈칸 ①②③을 골라 보세요. 그다음 ▶ 6시간 돌려 보기를 눌러요.';
+function setFb(kind,title,msg,think){fbEl.className='card feedback '+kind;fbEl.replaceChildren();
+  const s=document.createElement('strong');s.textContent=title;fbEl.append(s);const p=document.createElement('div');p.textContent=msg;fbEl.append(p);
+  if(think){const t=document.createElement('div');t.className='think';t.textContent=think;fbEl.append(t);}}
+function evaluate(){
+  const a=axisEl.value,d=dirEl.value,g=+degEl.value;
+  if(a!=='pole')return setFb('warn','① 북극성이 움직였어요','북쪽 하늘(북 버튼)을 보세요. 관측 사실 1에서 북극성은 거의 움직이지 않아요. 무엇을 중심으로 돌려야 북극성이 제자리에 있을까요?');
+  if(d!=='ew')return setFb('warn','② 별이 서쪽에서 떴어요','남쪽 하늘(남 버튼)을 보세요. 관측 사실 2와 반대로 움직였어요.');
+  if(g!==15)return setFb('warn',`③ 6시간 동안 ${g*6}° 돌았어요`,`관측 사실 3에서 북두칠성은 6시간에 90° 돌아요. 그럼 1시간에는 몇 도일까요? (90 ÷ 6)`);
+  setFb('ok','완성! 실제 하늘과 똑같이 움직여요','천구가 북극성을 중심으로, 동쪽에서 서쪽으로, 1시간에 15°씩 돌아요. 이것이 일주운동이에요. 24시간이면 한 바퀴(360°)예요.',
+    '생각해 보기: 하늘이 정말 도는 걸까요? 실제로 도는 것은 무엇일까요?');}
+
+/* renderer (stereographic, like Stellarium) */
+const cv=document.getElementById('sky'),ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+const view={az:0,alt:32,taz:0,talt:32};
+const FOV=115*D2R;
+function resize(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);}
+new ResizeObserver(resize).observe(cv);resize();
+let cf,cr,cu,K,cx,cy;
+function setCam(){const A=view.az*D2R,h=view.alt*D2R;cf=[Math.sin(A)*Math.cos(h),Math.cos(A)*Math.cos(h),Math.sin(h)];cr=[Math.cos(A),-Math.sin(A),0];cu=cross(cr,cf);
+  K=Math.max(W,H*1.15)/2/(2*Math.tan(FOV/4));cx=W/2;cy=H*0.52;}
+function proj(v){const x=dot(v,cr),y=dot(v,cu),z=dot(v,cf),s=2/(1+z);return {x:cx+K*s*x,y:cy-K*s*y,z};}
+const azalt=(az,alt)=>{const a=az*D2R,h=alt*D2R;return [Math.sin(a)*Math.cos(h),Math.cos(a)*Math.cos(h),Math.sin(h)];};
+const vis=p=>p.z>-0.35&&p.x>-60&&p.x<W+60&&p.y>-60&&p.y<H+60;
+function circle3(p1,p2,p3){const ax=p1.x,ay=p1.y,bx=p2.x,by=p2.y,qx=p3.x,qy=p3.y;
+  const d=2*(ax*(by-qy)+bx*(qy-ay)+qx*(ay-by));if(Math.abs(d)<1e-9)return null;
+  const ux=((ax*ax+ay*ay)*(by-qy)+(bx*bx+by*by)*(qy-ay)+(qx*qx+qy*qy)*(ay-by))/d;
+  const uy=((ax*ax+ay*ay)*(qx-bx)+(bx*bx+by*by)*(ax-qx)+(qx*qx+qy*qy)*(bx-ax))/d;
+  return {x:ux,y:uy,r:Math.hypot(ax-ux,ay-uy)};}
+const DIRS=['북','북동','동','남동','남','남서','서','북서'];
+const trailEl=document.getElementById('trail'),cmpEl=document.getElementById('compare');
+const clockEl=document.getElementById('clock'),viewEl=document.getElementById('viewlabel');
+const dirBtns=[...document.querySelectorAll('#dirbar button')];
+
+function drawLines(R,color,dash){ctx.strokeStyle=color;ctx.lineWidth=1.2;ctx.setLineDash(dash);ctx.beginPath();
+  for(const [a,b] of LINES){const va=ap(R,byName[a].base),vb=ap(R,byName[b].base);if(va[2]<0||vb[2]<0)continue;
+    const pa=proj(va),pb=proj(vb);if(!vis(pa)||!vis(pb))continue;ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);}
+  ctx.stroke();ctx.setLineDash([]);}
+function draw(){
+  const d=((view.taz-view.az+540)%360)-180;view.az=(view.az+d*0.18+360)%360;view.alt+=(view.talt-view.alt)*0.18;
+  setCam();ctx.setTransform(DPR,0,0,DPR,0,0);
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#050814');g.addColorStop(1,'#141d36');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // trails
+  if(trailEl.checked&&trails.size){ctx.lineWidth=1.2;
+    for(const [s,t] of trails){if(t.length<2)continue;ctx.strokeStyle=`rgba(255,214,140,${s.mag<2.5?.6:.32})`;ctx.beginPath();let pen=false;
+      for(const v of t){if(v[2]<0){pen=false;continue;}const p=proj(v);if(p.z<-0.35){pen=false;continue;}pen?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);pen=true;}
+      ctx.stroke();}}
+  drawLines(S.R,'rgba(120,170,255,.55)',[]);
+  if(cmpEl.checked)drawLines(rotMat(POLE,-15*S.clock*D2R),'rgba(140,230,255,.85)',[5,5]);
+  for(const s of stars){const v=pos(s);if(v[2]<0)continue;const p=proj(v);if(!vis(p))continue;
+    const r=Math.max(0.55,2.9-s.mag*0.5);ctx.globalAlpha=Math.max(0.18,Math.min(1,1.25-s.mag*0.13));ctx.fillStyle=s.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.fill();if(s.mag<1.2){ctx.globalAlpha=.18;ctx.beginPath();ctx.arc(p.x,p.y,r*2.6,0,7);ctx.fill();}}
+  ctx.globalAlpha=1;
+  ctx.font='600 14px "IBM Plex Sans KR",sans-serif';ctx.textAlign='left';
+  const lab=(n,t,c)=>{const v=pos(byName[n]);if(v[2]<0)return;const p=proj(v);if(!vis(p))return;ctx.fillStyle=c;ctx.fillText(t,p.x+7,p.y-6);};
+  for(const [n,t] of LABELS)lab(n,t,'rgba(150,190,255,.9)');
+  lab('polaris','★ 북극성','#ffd27a');
+  // ground
+  const c=circle3(proj(azalt(view.az,0)),proj(azalt(view.az+90,0)),proj(azalt(view.az-90,0)));
+  if(c){const nad=proj([0,0,-1]);const inside=Math.hypot(nad.x-c.x,nad.y-c.y)<c.r;ctx.beginPath();
+    if(inside)ctx.arc(c.x,c.y,c.r,0,Math.PI*2);else{ctx.rect(0,0,W,H);ctx.arc(c.x,c.y,c.r,0,Math.PI*2);}
+    ctx.fillStyle='#121a14';ctx.fill('evenodd');ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.strokeStyle='rgba(160,190,140,.55)';ctx.lineWidth=1.4;ctx.stroke();}
+  ctx.textAlign='center';
+  for(let i=0;i<8;i++){const p=proj(azalt(i*45,1.8));if(!vis(p))continue;const main=i%2===0;
+    ctx.font=(main?'26px ':'15px ')+'"Do Hyeon","IBM Plex Sans KR",sans-serif';ctx.fillStyle=main?'#ffd27a':'rgba(255,210,122,.7)';ctx.fillText(DIRS[i],p.x,p.y-4);}
+  clockEl.textContent=fmtClock(S.clock);
+  viewEl.textContent=DIRS[Math.round(view.az/45)%8]+'쪽 하늘 보는 중';
+  for(const b of dirBtns)b.setAttribute('aria-pressed',Math.round(view.taz)%360===+b.dataset.az);
+  requestAnimationFrame(draw);}
+function fmtClock(h){const t=18+h,hh=t%24,H24=Math.floor(hh),mm=Math.floor((hh-H24)*60);
+  const ampm=H24<12?'오전':'오후',h12=H24%12===0?12:H24%12;return `${ampm} ${h12}:${String(mm).padStart(2,'0')}`;}
+
+for(const b of dirBtns)b.addEventListener('click',()=>{view.taz=+b.dataset.az;view.talt=32;});
+let pan=null;
+cv.addEventListener('pointerdown',e=>{pan={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';});
+cv.addEventListener('pointermove',e=>{if(!pan)return;const k=115/Math.max(W,1);
+  view.taz=(view.taz-(e.clientX-pan.x)*k+360)%360;view.talt=Math.max(4,Math.min(85,view.talt+(e.clientY-pan.y)*k));
+  view.az=view.taz;view.alt=view.talt;pan={x:e.clientX,y:e.clientY};});
+const endPan=()=>{pan=null;cv.style.cursor='grab';};
+cv.addEventListener('pointerup',endPan);cv.addEventListener('pointercancel',endPan);
+
+resetSky();setFb('idle','빈칸 세 개를 골라 보세요',START_MSG);
+requestAnimationFrame(draw);
+})();
+</script>

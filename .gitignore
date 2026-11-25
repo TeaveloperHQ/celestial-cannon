@@ -1,0 +1,5 @@
+# 빌드 결과 · 로그 · 학생 기록(이름·점수)은 절대 올리지 않는다
+dist/
+*.exe
+*.log
+planet-turret-results/

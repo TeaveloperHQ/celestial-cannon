@@ -1,0 +1,32 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    행성 포탑 방어전 아이콘 — 큰 크기용(256px 이상).
+    teaveloper 공용 규격: 800x800 라운드 사각형(rx 184) · 공식 그라데이션 · 흰색 죽방.
+    이 앱만의 것: 죽방이 도는 행성 위에 서 있고, 하늘에는 북극성을 중심으로 한 별 자취(일주운동).
+  -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#6366f1"/>
+      <stop offset="50%"  stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <clipPath id="sq"><rect x="112" y="112" width="800" height="800" rx="184"/></clipPath>
+  </defs>
+  <rect x="112" y="112" width="800" height="800" rx="184" fill="url(#g)"/>
+  <g clip-path="url(#sq)">
+    <!-- 별 자취(북극성 중심 동심원 호) -->
+    <g fill="none" stroke="#ffffff" stroke-linecap="round" opacity="0.8">
+      <path d="M 790 300 A 110 110 0 1 0 650 390" stroke-width="16"/>
+      <path d="M 860 330 A 180 180 0 0 0 560 230" stroke-width="14"/>
+      <path d="M 620 500 A 240 240 0 0 1 470 300" stroke-width="12" opacity="0.7"/>
+    </g>
+    <circle cx="690" cy="290" r="26" fill="#ffffff"/>
+    <!-- 행성 -->
+    <circle cx="512" cy="1240" r="620" fill="#ffffff"/>
+    <!-- 죽방 — 원 r72 · 밑변 172 · 높이 156, 행성 위에 선다 -->
+    <g fill="#6366f1">
+      <circle cx="330" cy="560" r="72" fill="#ffffff"/>
+      <path d="M330 608 L244 764 L416 764 Z" fill="#ffffff"/>
+    </g>
+  </g>
+</svg>
