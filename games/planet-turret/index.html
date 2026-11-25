@@ -216,12 +216,12 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 
 /* Levels: spin-axis tilt (latitude) and window direction; each ends with a villain. */
 const LEVELS=[
- {lat:90,  az:180,alt:28,name:'북극',       line:'회전축이 머리 위! 악당들이 지평선과 나란히 돌아요.',boss:'문어 대장 꾸물',kind:'octo'},
- {lat:0,   az:90, alt:25,name:'적도 · 동쪽', line:'회전축이 땅에 누웠어요. 악당들이 수직으로 솟아올라요.',boss:'심술 왕구름',kind:'cloud'},
- {lat:37.5,az:90, alt:25,name:'서울 · 동쪽', line:'축이 37.5° 기울었어요. 악당들이 비스듬히 떠올라요.',boss:'팽이 백작',kind:'top'},
- {lat:37.5,az:180,alt:24,name:'서울 · 남쪽', line:'남쪽의 악당은 낮게 호를 그리다 금방 져요.',boss:'도넛 마왕',kind:'donut'},
- {lat:37.5,az:270,alt:25,name:'서울 · 서쪽', line:'서쪽의 악당은 비스듬히 지평선 아래로 져요.',boss:'번개 냥냥',kind:'cat'},
- {lat:37.5,az:0,  alt:30,name:'서울 · 북쪽', line:'북쪽의 악당은 북극성을 중심으로 원을 그려요.',boss:'블랙홀 할멈',kind:'hole'}
+ {lat:90,  az:180,alt:28,lst:12,  name:'북극',       line:'회전축이 머리 위! 북두칠성도 악당도 지평선과 나란히 돌아요.',boss:'문어 대장 꾸물',kind:'octo'},
+ {lat:0,   az:90, alt:25,lst:23.4,name:'적도 · 동쪽', line:'회전축이 땅에 누웠어요. 오리온도 악당도 수직으로 솟아올라요.',boss:'심술 왕구름',kind:'cloud'},
+ {lat:37.5,az:90, alt:25,lst:23.4,name:'서울 · 동쪽', line:'축이 37.5° 기울었어요. 오리온도 악당도 비스듬히 떠올라요.',boss:'팽이 백작',kind:'top'},
+ {lat:37.5,az:180,alt:24,lst:4,   name:'서울 · 남쪽', line:'남쪽의 별(시리우스)과 악당은 낮게 호를 그리다 금방 져요.',boss:'도넛 마왕',kind:'donut'},
+ {lat:37.5,az:270,alt:25,lst:9,   name:'서울 · 서쪽', line:'서쪽에서는 오리온도 악당도 비스듬히 지평선 아래로 져요.',boss:'번개 냥냥',kind:'cat'},
+ {lat:37.5,az:0,  alt:30,lst:6,   name:'서울 · 북쪽', line:'북두칠성과 카시오페이아가 북극성을 중심으로 원을 그려요.',boss:'블랙홀 할멈',kind:'hole'}
 ];
 const KILLS_TO_BOSS=8;
 /* minion types (original cute villains) */
@@ -238,6 +238,23 @@ const STARS=[];
 for(let i=0;i<520;i++){const z=2*Math.random()-1,t=2*Math.PI*Math.random(),r=Math.sqrt(1-z*z);
   const mag=Math.pow(Math.random(),0.55)*5.2,tint=Math.random();
   STARS.push({base:[r*Math.cos(t),r*Math.sin(t),z],mag,col:tint<.15?'#ffd9b8':tint<.32?'#cfe0ff':'#f4f6ff'});}
+
+/* 대표 별자리: 실제 적경(시)·적위(°)·등급(J2000). 악당처럼 무한히 먼 곳에 고정된 방향이다.
+   장소가 바뀔 때 그 위도와 시각(항성시 lst, 시)으로 관성계 방향 base 를 만든다(G.R=I 일 때의 지평 좌표).
+   그 뒤 화면에서 움직이는 것은 행성 회전 G.R 뿐이다. 오리온은 거의 천구의 적도 위라 정동에서 떠서 정서로 진다. */
+const CONSTELLATIONS=[
+ {name:'북두칠성',stars:[[11.062,61.75,1.8],[11.031,56.38,2.4],[11.897,53.69,2.4],[12.257,57.03,3.3],[12.900,55.96,1.8],[13.399,54.93,2.2],[13.792,49.31,1.9]],
+  lines:[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]]},
+ {name:'카시오페이아',stars:[[0.153,59.15,2.3],[0.675,56.54,2.2],[0.945,60.72,2.2],[1.430,60.24,2.7],[1.907,63.67,3.4]],lines:[[0,1],[1,2],[2,3],[3,4]]},
+ {name:'오리온',stars:[[5.919,7.41,0.5],[5.419,6.35,1.6],[5.533,-0.30,2.2],[5.604,-1.20,1.7],[5.679,-1.94,1.8],[5.796,-9.67,2.1],[5.242,-8.20,0.1]],
+  lines:[[0,1],[0,4],[1,2],[2,3],[3,4],[4,5],[2,6]]},
+ {name:'시리우스',stars:[[6.752,-16.72,-1.4]],lines:[]}
+];
+/* 적도 좌표 → 지평 좌표(x=동, y=북, z=천정). 적위 90°는 회전축 P=[0,cosφ,sinφ] 와 같다. */
+function eqDir(raH,dec,lat,lst){const H=(lst-raH)*15*D2R,d=dec*D2R,f=lat*D2R,cd=Math.cos(d);
+  return [-cd*Math.sin(H),Math.sin(d)*Math.cos(f)-cd*Math.cos(H)*Math.sin(f),Math.sin(d)*Math.sin(f)+cd*Math.cos(H)*Math.cos(f)];}
+let SKY=[];
+function buildSky(L){SKY=CONSTELLATIONS.map(c=>({name:c.name,lines:c.lines,stars:c.stars.map(([ra,de,mag])=>({base:eqDir(ra,de,L.lat,L.lst),mag}))}));}
 
 let G;
 const MAX_LIVES=5;
@@ -258,7 +275,7 @@ const mult=()=>fever()?2:1;
 function nextLevel(){let i=G.lvlIdx+1;if(i>=LEVELS.length){i=0;G.loop++;}setLevel(i);}
 function setLevel(i){G.lvlIdx=i;const L=lvl();const lat=L.lat*D2R;G.P=[0,Math.cos(lat),Math.sin(lat)];G.R=I3();G.enemies=[];G.kills=0;G.spawnT=1.2;G.boss=null;G.bossDone=false;
   G.lvlT=0;G.nextT=0;G.seen|=1<<i;
-  cam.az=L.az;cam.alt=L.alt;showBanner(`LEVEL ${diff()+1} · ${L.name}`,L.line);lvlEl.textContent=`위도 ${L.lat}° · ${L.name}`;}
+  buildSky(L);cam.az=L.az;cam.alt=L.alt;showBanner(`LEVEL ${diff()+1} · ${L.name}`,L.line);lvlEl.textContent=`위도 ${L.lat}° · ${L.name}`;}
 
 /* ---------- DOM ---------- */
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),mini=document.getElementById('mini'),mctx=mini.getContext('2d');
@@ -453,8 +470,17 @@ function drawVillain(c,kind,s,t){
 function draw(now){const t=now/1000;setCam();ctx.setTransform(DPR,0,0,DPR,0,0);
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#04060f');g.addColorStop(1,'#101a33');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   for(const s of STARS){const v=ap(G.R,s.base);if(v[2]<0)continue;const p=proj(v);if(!onScreen(p))continue;
-    ctx.globalAlpha=Math.max(.2,1-s.mag*.15);ctx.fillStyle=s.col;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.6,2.5-s.mag*.4),0,7);ctx.fill();}
+    ctx.globalAlpha=Math.max(.15,.8-s.mag*.13);ctx.fillStyle=s.col;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.6,2.2-s.mag*.4),0,7);ctx.fill();}
   ctx.globalAlpha=1;
+  // 대표 별자리: 선은 두 별이 모두 지평선 위일 때만, 이름은 보이는 별 위쪽에
+  for(const c of SKY){const pts=c.stars.map(s=>{const v=ap(G.R,s.base);return v[2]>0?proj(v):null;});
+    ctx.strokeStyle='rgba(140,200,255,.38)';ctx.lineWidth=1.3;ctx.beginPath();
+    for(const [a,b] of c.lines){const p=pts[a],q=pts[b];if(!p||!q)continue;ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);}ctx.stroke();
+    let sx=0,top=1e9,bot=-1e9,n=0;ctx.fillStyle='#fffbe8';ctx.shadowColor='#bcd8ff';ctx.shadowBlur=8;
+    for(let i=0;i<pts.length;i++){const p=pts[i];if(!p||!onScreen(p))continue;
+      ctx.beginPath();ctx.arc(p.x,p.y,Math.max(1.6,3.8-c.stars[i].mag*.7),0,7);ctx.fill();sx+=p.x;top=Math.min(top,p.y);bot=Math.max(bot,p.y);n++;}
+    ctx.shadowBlur=0;
+    if(n>=Math.min(3,c.stars.length)){ctx.fillStyle='rgba(170,210,255,.85)';ctx.font='600 13px "IBM Plex Sans KR",sans-serif';ctx.textAlign='center';ctx.fillText(c.name,sx/n,top>40?top-12:bot+22);}}
   {const v=G.P;if(v[2]>=0){const p=proj(v);if(onScreen(p)){ctx.fillStyle='#ffd27a';ctx.beginPath();ctx.arc(p.x,p.y,3.4,0,7);ctx.fill();
     ctx.font='600 13px "IBM Plex Sans KR",sans-serif';ctx.textAlign='left';ctx.fillText('북극성(회전축)',p.x+7,p.y-6);}}}
   // minions
