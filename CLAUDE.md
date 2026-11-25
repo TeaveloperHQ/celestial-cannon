@@ -48,7 +48,7 @@
 ## 다음 단계 후보 (미정)
 
 - 실제 태블릿에서 플레이 테스트하고 난이도 조정하기: `FLIGHT`, `chargeTime`, 스폰 간격, 빌런 HP.
-- 교실 서버 실제 수업 테스트: 판 시간 대비 장소 상한·`KILLS_TIMED`(10)·수리 시간(6초) 조정. exe 아이콘 리소스(syso)·branding 폴더는 아직 없음.
+- 교실 서버 실제 수업 테스트: 판 시간 대비 장소 상한·`KILLS_TIMED`(10)·수리 시간(6초) 조정. exe 아이콘은 `branding/`(gen.py → SVG, app.ico) + `rsrc_windows_amd64.syso`(`go run ./branding/mksyso` 로 생성, 저장소에 커밋). 아이콘을 바꾸면 syso 도 다시 만들어 커밋해야 포털 빌드 exe 에 반영된다.
 - 태블릿 자이로를 쓰는 노출 사진 활동: HTTPS가 필요하고 기울인 회전판(간이 적도의)과 함께 쓰는 안. 자세한 내용은 `docs/lesson-design.md`.
 
 ## 저장소 규칙

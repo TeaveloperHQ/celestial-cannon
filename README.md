@@ -67,6 +67,21 @@ PT_LOCAL=1 go run .                       # 이 PC 에서만 접속(혼자 시�
 | 서버 → 교사 | `host{sess,players}` (2Hz) |
 | 교사 → 서버 | `start{min}` `pause` `resume` `stop` `reset` `remove{id}` |
 
+## 아이콘
+
+`branding/` — teaveloper 공용 규격(1024 캔버스 · 800 라운드 사각형 rx 184 · 공식 그라데이션 · 흰 죽방).
+죽방이 도는 행성 위에 서 있고, 옆의 대포가 북극성을 겨눈다. 하늘에는 북극성 중심 별 자취(일주운동).
+작은 크기(16·32·48px)는 행성·대포·북극성만 남긴 `icon-small.svg`.
+
+```bash
+cd branding && python3 gen.py        # icon.svg / icon-small.svg 다시 만들기
+# PNG(1024·512·256)와 app.ico(256·128·64 = icon.svg, 48·32·16 = icon-small.svg)는 SVG 를 래스터로 바꿔 만든다(magick 등).
+cd .. && go run ./branding/mksyso branding/app.ico rsrc_windows_amd64.syso   # exe 아이콘(윈도우 빌드 시 자동 링크)
+cp branding/icon-small.svg assets/favicon.svg && cp branding/icon.svg assets/icon.svg   # 파비콘 · 입장 화면 로고
+```
+
+`mksyso` 는 외부 도구(rsrc) 없이 표준 라이브러리로 COFF 리소스 오브젝트를 쓰는 작은 생성기다.
+
 ## 라이선스
 
 MIT — [LICENSE](LICENSE) 참고.
