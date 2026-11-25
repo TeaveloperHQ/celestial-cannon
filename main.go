@@ -1,4 +1,4 @@
-// planet-turret — 같은 교내망의 학생들이 QR 로 접속해 함께 하는 "행성 포탑 방어전" 교실 서버.
+// celestial-cannon — 같은 교내망의 학생들이 QR 로 접속해 함께 하는 "행성 포탑 방어전" 교실 서버.
 // 중학교 1학년 과학 '일주운동' 단원. 구조는 형제 프로젝트 vector-soccer · Teavel_SubMarine 과 같다.
 //
 // 교사 PC 에서 이 exe 를 더블클릭하면:
@@ -34,7 +34,7 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 )
 
-//go:embed index.html assets
+//go:embed games/planet-turret/index.html assets
 var assetsFS embed.FS
 
 const (
@@ -51,7 +51,7 @@ const (
 func main() {
 	setupLogging()
 
-	gamePage, err := fs.ReadFile(assetsFS, "index.html")
+	gamePage, err := fs.ReadFile(assetsFS, "games/planet-turret/index.html")
 	if err != nil {
 		log.Fatalf("게임 파일 읽기 실패: %v", err)
 	}
@@ -236,10 +236,10 @@ func openBrowser(url string) {
 	}
 }
 
-// setupLogging 은 데이터 폴더에 planet-turret.log 를 남긴다 + 콘솔이 있으면 화면에도 출력.
+// setupLogging 은 데이터 폴더에 celestial-cannon.log 를 남긴다 + 콘솔이 있으면 화면에도 출력.
 func setupLogging() {
 	log.SetFlags(log.LstdFlags)
-	f, err := os.OpenFile(filepath.Join(dataDir(), "planet-turret.log"),
+	f, err := os.OpenFile(filepath.Join(dataDir(), "celestial-cannon.log"),
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return

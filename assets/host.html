@@ -306,9 +306,9 @@ function fillQrPlayers() {
 
 // ── WebSocket ────────────────────────────────────────────
 let ws = null, sess = { state: 'idle', round: 0, remainMs: 0, durMs: 300000 }, players = [];
-const MINUTES = [3, 5, 8];
+const MINUTES = [5, 8, 11];
 let pickMin = +(localStorage.getItem('pt_min') || 5), lastSaved = '';
-if (!MINUTES.includes(pickMin)) pickMin = 5; // 예전 10·12·15분 선택이 남아 있으면 기본값으로
+if (!MINUTES.includes(pickMin)) pickMin = 5; // 목록에 없는 예전 선택이 남아 있으면 기본값으로
 function connect() {
   ws = new WebSocket(`ws://${location.host}/ws?role=host`);
   ws.onopen = () => { $('#conn').textContent = '서버 연결됨'; $('#conn').className = 'status'; };

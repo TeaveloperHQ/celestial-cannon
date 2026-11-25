@@ -2,4 +2,5 @@
 dist/
 *.exe
 *.log
+celestial-cannon-results/
 planet-turret-results/

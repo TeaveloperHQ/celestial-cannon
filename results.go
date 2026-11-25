@@ -17,7 +17,8 @@ import (
 	"time"
 )
 
-// 판 결과는 데이터 폴더의 planet-turret-results/<날짜>/<시각>-<판>.json 에 한 판씩 저장한다.
+// 판 결과는 exe 옆 celestial-cannon-results/<날짜>/<시각>-<판>.json 에 한 판씩 저장한다.
+// 폴더 이름에 게임 이름을 붙여, 포털에서 받은 여러 게임 exe 가 같은 폴더(다운로드)에 있어도 기록이 섞이지 않는다.
 // 교사 화면에서 판마다 엑셀(CSV)로 내려받는다.
 
 type Row struct {
@@ -36,7 +37,7 @@ type Result struct {
 	Rows    []Row     `json:"rows"`
 }
 
-func resultsDir() string { return filepath.Join(dataDir(), "planet-turret-results") }
+func resultsDir() string { return filepath.Join(dataDir(), "celestial-cannon-results") }
 
 func saveResult(r *Result) (string, error) {
 	date := r.Started.Format("2006-01-02")
@@ -49,7 +50,14 @@ func saveResult(r *Result) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(filepath.Join(dir, file), b, 0644); err != nil {
+	// 임시 파일에 쓴 뒤 이름 바꾸기 — 저장 도중 꺼져도 반쯤 쓴 기록 파일이 남지 않는다(teavel-submarine 과 같음).
+	final := filepath.Join(dir, file)
+	tmp := final + ".tmp"
+	if err := os.WriteFile(tmp, b, 0644); err != nil {
+		return "", err
+	}
+	if err := os.Rename(tmp, final); err != nil {
+		_ = os.Remove(tmp)
 		return "", err
 	}
 	return date + "/" + file, nil

@@ -5,7 +5,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- 교실 서버(main.go)가 내보낼 때만 content="1" 로 바뀌어 접속 모드가 켜진다. 파일로 열면 혼자 하기. -->
 <meta name="pt-server" content="0">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
 <script>(function(){try{var t=localStorage.getItem('pt_theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,8 +49,9 @@ button{font:inherit;color:inherit}
 .banner .b1.boss{color:var(--pink)}
 .banner .b2{font-size:17px;margin-top:6px;background:rgba(7,10,24,.72);border:1px solid var(--line);border-radius:10px;padding:6px 12px;display:inline-block}
 
-#mini{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:54px;width:170px;height:170px;border-radius:14px;border:1px solid var(--line);background:rgba(7,10,24,.72);pointer-events:none}
-@media (max-width:600px){#mini{width:124px;height:124px}}
+#mini{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:54px;width:230px;height:auto;aspect-ratio:23/28;border-radius:14px;border:1px solid var(--line);background:#070a18;cursor:zoom-in;transition:width .2s,height .2s;touch-action:manipulation}
+#mini.big{width:min(400px,60vh);cursor:zoom-out}
+@media (max-width:700px){#mini{width:150px}#mini.big{width:min(300px,70vw)}}
 
 .boost{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));
   touch-action:none;border-radius:18px;border:2px solid var(--cyan);background:rgba(111,227,255,.12);color:var(--cyan);
@@ -92,7 +93,7 @@ button{font:inherit;color:inherit}
 :root[data-theme="dark"] .tv{--bg:#0f172a;--surface:#1e293b;--bd:#334155;--mut:#94a3b8;--fg:#e2e8f0;--acc:#38bdf8;--acc-soft:#0c2a40;--hover:#334155;
   --shadow:0 1px 3px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.3);color-scheme:dark}
 .tv::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--brand);
-  -webkit-mask:url(assets/emblem.png) center / auto 48vh no-repeat;mask:url(assets/emblem.png) center / auto 48vh no-repeat;opacity:.06}
+  -webkit-mask:url(../../assets/emblem.png) center / auto 48vh no-repeat;mask:url(../../assets/emblem.png) center / auto 48vh no-repeat;opacity:.06}
 :root[data-theme="dark"] .tv::before{opacity:.10}
 .tv.dim{background:rgba(15,23,42,.55);backdrop-filter:blur(3px)}
 .tv[hidden]{display:none}
@@ -141,7 +142,7 @@ button{font:inherit;color:inherit}
     <button class="mute" id="mute" type="button" aria-label="소리 켜고 끄기">🔊</button>
   </div>
   <div class="banner" id="banner"><div class="b1" id="b1"></div><div class="b2" id="b2"></div></div>
-  <canvas id="mini" aria-label="우주에서 본 모습"></canvas>
+  <canvas id="mini" aria-label="우주에서 본 지구. 누르면 크게 보기"></canvas>
   <button class="boost" id="boost" type="button">⟳ 빨리 돌리기<small>누르고 있기 · → 키</small></button>
   <div class="overlay" id="over" hidden>
     <div class="panel">
@@ -158,7 +159,7 @@ button{font:inherit;color:inherit}
   <!-- 교실 접속 모드: 입장 -->
   <section class="tv" id="joinScr" hidden>
     <button class="themebtn" type="button" title="라이트/다크 전환"></button>
-    <img class="logo" src="assets/icon.svg" alt="">
+    <img class="logo" src="../../assets/icon.svg" alt="">
     <h1>행성 포탑 방어전</h1>
     <p class="sub">악당을 탭해서 쏘고, ⟳ 버튼으로 행성을 돌려요.<br>선생님이 시작하면 반 친구들과 함께 겨뤄요!</p>
     <div class="field"><label for="jSid">학번 (선택)</label><input class="txt" id="jSid" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="예: 10315"></div>
@@ -206,6 +207,7 @@ const I3=()=>[1,0,0,0,1,0,0,0,1];
 function rotMat(k,a){const c=Math.cos(a),s=Math.sin(a),t=1-c,[x,y,z]=k;
   return [t*x*x+c,t*x*y-s*z,t*x*z+s*y, t*x*y+s*z,t*y*y+c,t*y*z-s*x, t*x*z-s*y,t*y*z+s*x,t*z*z+c];}
 function mul(A,B){const C=new Array(9);for(let i=0;i<3;i++)for(let j=0;j<3;j++)C[i*3+j]=A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j];return C;}
+const apply=(R,v)=>[R[0]*v[0]+R[1]*v[1]+R[2]*v[2],R[3]*v[0]+R[4]*v[1]+R[5]*v[2],R[6]*v[0]+R[7]*v[1]+R[8]*v[2]];
 const ap=(R,v)=>[R[0]*v[0]+R[1]*v[1]+R[2]*v[2],R[3]*v[0]+R[4]*v[1]+R[5]*v[2],R[6]*v[0]+R[7]*v[1]+R[8]*v[2]];
 const apT=(R,v)=>[R[0]*v[0]+R[3]*v[1]+R[6]*v[2],R[1]*v[0]+R[4]*v[1]+R[7]*v[2],R[2]*v[0]+R[5]*v[1]+R[8]*v[2]];
 const azalt=(az,alt)=>{const a=az*D2R,h=alt*D2R;return [Math.sin(a)*Math.cos(h),Math.cos(a)*Math.cos(h),Math.sin(h)];}; // x=E y=N z=Up
@@ -258,7 +260,7 @@ function buildSky(L){SKY=CONSTELLATIONS.map(c=>({name:c.name,lines:c.lines,stars
 
 let G;
 const MAX_LIVES=5;
-/* timed: 교실 판(교사가 시작한 3·5·8분 경기). 생명이 다 닳으면 탈락 대신 수리 후 계속, 장소마다 시간 상한이 있어
+/* timed: 교실 판(교사가 시작한 5·8·11분 경기). 생명이 다 닳으면 탈락 대신 수리 후 계속, 장소마다 시간 상한이 있어
    판 안에 6곳을 모두 거친다. timed 가 아니면(혼자 하기·연습) 예전처럼 생명이 다 닳으면 끝. */
 function newGame(opts={}){G={score:0,combo:1,lastHit:-9,lives:MAX_LIVES,lvlIdx:0,loop:0,kills:0,t:0,R:I3(),P:null,enemies:[],fx:[],pops:[],shells:[],smoke:[],
   spawnT:.6,over:false,boss:null,powerT:0,hideMsgT:0,cool:0,side:0,recoil:[0,0],flashT:[0,0],aim:-Math.PI/2,tipShown:false,
@@ -267,7 +269,7 @@ const lvl=()=>LEVELS[G.lvlIdx];
 const diff=()=>G.loop*LEVELS.length+G.lvlIdx;
 const KILLS_TIMED=10;
 const killsNeed=()=>G.timed?KILLS_TIMED:KILLS_TO_BOSS;
-/* 한 장소에 쓸 수 있는 시간(초): 판 시간의 80%를 6곳에 나눈다 → 3분 24초, 5분 40초, 8분 64초 */
+/* 한 장소에 쓸 수 있는 시간(초): 판 시간의 80%를 6곳에 나눈다 → 5분 40초, 8분 64초, 11분 88초 */
 const levelBudget=()=>Math.max(20,S.durMs/1000*0.8/LEVELS.length);
 /* 시간 초과로 다음 장소로 가기 전에 빌런을 잡을 시간(초): 기본 25초, 짧은 판에서는 장소 시간의 45% */
 const bossGrace=()=>Math.min(25,levelBudget()*.45);
@@ -302,7 +304,8 @@ document.getElementById('mute').addEventListener('click',e=>{muted=!muted;e.curr
 let W=0,H=0,DPR=1;
 function resize(){DPR=Math.min(2,window.devicePixelRatio||1);let r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
   r=mini.getBoundingClientRect();mini.width=Math.round(r.width*DPR);mini.height=Math.round(r.height*DPR);}
-new ResizeObserver(resize).observe(cv);resize();
+new ResizeObserver(resize).observe(cv);new ResizeObserver(resize).observe(mini);resize();
+mini.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();mini.classList.toggle('big');});
 const cam={az:180,alt:28};
 let cf,cr,cu,K,cx,cy;
 function setCam(){const A=cam.az*D2R,h=cam.alt*D2R;cf=[Math.sin(A)*Math.cos(h),Math.cos(A)*Math.cos(h),Math.sin(h)];cr=[Math.cos(A),-Math.sin(A),0];cu=cross(cr,cf);
@@ -563,28 +566,78 @@ function drawTurret(now){const {x:px,y:py}=pivot(),a=G.aim,ux=Math.cos(a),uy=Mat
   ctx.fillStyle=Math.sin(now/250)>0?'#ff6fa8':'#ffd27a';ctx.beginPath();ctx.arc(.35*s+Math.sin(t*3)*3,-1.5*s,.13*s,0,7);ctx.fill();
   ctx.restore();}
 
-/* ---------- minimap: the same moment seen from space (fixed frame) ---------- */
-function drawMini(){const w=mini.width/DPR,h=mini.height/DPR;mctx.setTransform(DPR,0,0,DPR,0,0);mctx.clearRect(0,0,w,h);
-  const P=G.P,X=[1,0,0];const V=norm(add(X.map(v=>v*Math.cos(18*D2R)),P,Math.sin(18*D2R)));
+/* ---------- 지도: 우주(관성계)에 고정한 카메라로 본 "실제로 도는 지구" ----------
+   - 경선·위선은 지구에 붙어 있어(지평 좌표에서 고정) 지구와 함께 서→동으로 돈다. 관성계 = apT(G.R, 지구 고정 벡터).
+   - 나(포탑)는 지구 표면에 붙어 돌고, 내 지평면이 함께 기운다.
+   - 악당·빌런·별자리는 바깥 고리 위에 멈춰 있다. 지금 내 지평면 위(dot(base,T)>0)면 밝게, 아래면 흐리게 → 보이는 것/진 것. */
+function earthGrid(){ // 지구 고정 좌표(레벨 시작 때의 지평 좌표)로 본 경선·위선
+  const P=G.P,Z=[0,0,1];let E0=add(Z,P,-dot(Z,P));E0=Math.hypot(E0[0],E0[1],E0[2])<1e-6?[1,0,0]:norm(E0);const E1=cross(P,E0);
+  const pt=(lon,lat)=>{const c=Math.cos(lat);return add(add(E0.map(v=>v*Math.cos(lon)*c),E1,Math.sin(lon)*c),P,Math.sin(lat));};
+  const lines=[];
+  for(let k=0;k<12;k++){const lon=k*Math.PI/6,l=[];for(let i=0;i<=24;i++)l.push(pt(lon,-Math.PI/2+i*Math.PI/24));lines.push({pts:l,me:k===0});}
+  for(const la of [-60,-30,0,30,60]){const l=[];for(let i=0;i<=48;i++)l.push(pt(i*Math.PI/24,la*D2R));lines.push({pts:l,eq:la===0});}
+  return {lines,E0};}
+let GRID=null,GRID_P=null;
+function drawMini(){const w=mini.width/DPR,h=mini.height/DPR;if(!w)return;mctx.setTransform(DPR,0,0,DPR,0,0);mctx.clearRect(0,0,w,h);
+  if(GRID_P!==G.P){GRID=earthGrid();GRID_P=G.P;}
+  const P=G.P;
+  // 카메라: 적도면보다 18° 위, 포탑이 처음에 앞쪽 왼편에 오도록(그 뒤 자전하며 오른쪽으로 돈다)
+  const front=apply(rotMat(P,-50*D2R),GRID.E0);const V=norm(add(front.map(v=>v*Math.cos(18*D2R)),P,Math.sin(18*D2R)));
   const U=norm(add(P,V,-dot(P,V))),Rr=cross(U,V);
-  const ox=w/2,oy=h/2+6,r=w*0.17,ring=w*0.4;
+  const fs=Math.max(8,w/25),top=fs*2.1,bot=fs*2.9,ox=w/2,oy=top+(h-top-bot)/2,ring=Math.min(w/2-fs*1.6,(h-top-bot)/2-fs*1.4),r=ring*0.52;
   const pr=v=>({x:ox+dot(v,Rr)*r,y:oy-dot(v,U)*r,d:dot(v,V)});
-  mctx.strokeStyle='rgba(148,160,189,.35)';mctx.setLineDash([3,4]);mctx.beginPath();mctx.arc(ox,oy,ring,0,7);mctx.stroke();mctx.setLineDash([]);
-  const mark=(b,col,sz)=>{const x=ox+dot(b,Rr)*ring,y=oy-dot(b,U)*ring;mctx.fillStyle=col;mctx.beginPath();mctx.moveTo(x,y-sz);mctx.lineTo(x+sz*.9,y);mctx.lineTo(x,y+sz);mctx.lineTo(x-sz*.9,y);mctx.closePath();mctx.fill();};
-  for(const en of G.enemies)mark(en.base,en.type==='candy'?'#ffd27a':'#ff8fc0',5);
-  if(G.boss)mark(G.boss.base,'#ff6fa8',9);
-  const pg=mctx.createRadialGradient(ox-r*.35,oy-r*.35,r*.2,ox,oy,r);pg.addColorStop(0,'#7a4a32');pg.addColorStop(1,'#2a160e');
+  const T=[G.R[6],G.R[7],G.R[8]];  // 나(포탑)의 위치 = 지구 중심에서 본 내 천정 방향(관성계)
+  // 우주에 멈춰 있는 것들: 바깥 고리 위(방향만 의미, 무한히 멀다)
+  const far=[];
+  for(const c of SKY){let b=[0,0,0];for(const st of c.stars)b=add(b,st.base);far.push({b:norm(b),kind:'star',name:c.name});}
+  for(const en of G.enemies)far.push({b:en.base,kind:'en',col:en.type==='candy'?'#ffd27a':'#ff8fc0'});
+  if(G.boss)far.push({b:G.boss.base,kind:'boss',col:'#ff6fa8'});
+  const drawFar=inFront=>{for(const f of far){if((dot(f.b,V)>=0)!==inFront)continue;
+    const x=ox+dot(f.b,Rr)*ring,y=oy-dot(f.b,U)*ring,up=dot(f.b,T)>0,sz=f.kind==='boss'?fs*.75:f.kind==='en'?fs*.45:fs*.32;
+    mctx.globalAlpha=inFront?1:.55;
+    if(f.kind==='star'){mctx.fillStyle=up?'#e8f1ff':'rgba(160,175,200,.45)';mctx.beginPath();mctx.arc(x,y,sz,0,7);mctx.fill();
+      mctx.font=`${fs*.8}px "IBM Plex Sans KR",sans-serif`;mctx.textAlign='center';mctx.fillStyle=up?'rgba(190,215,255,.95)':'rgba(150,160,185,.5)';mctx.fillText(f.name,x,y-sz-3);continue;}
+    mctx.beginPath();mctx.moveTo(x,y-sz);mctx.lineTo(x+sz*.9,y);mctx.lineTo(x,y+sz);mctx.lineTo(x-sz*.9,y);mctx.closePath();
+    if(up){mctx.fillStyle=f.col;mctx.fill();}else{mctx.strokeStyle='rgba(160,170,195,.7)';mctx.lineWidth=1.2;mctx.stroke();}}
+    mctx.globalAlpha=1;};
+  mctx.strokeStyle='rgba(148,160,189,.3)';mctx.lineWidth=1;mctx.setLineDash([3,4]);mctx.beginPath();mctx.arc(ox,oy,ring,0,7);mctx.stroke();mctx.setLineDash([]);
+  drawFar(false);
+  // 자전축(지구 뒤로 지나가는 부분) → 지구
+  const a1=pr(P.map(v=>v*1.75)),a2=pr(P.map(v=>-v*1.45));
+  mctx.strokeStyle='rgba(255,210,122,.8)';mctx.lineWidth=1.6;mctx.beginPath();mctx.moveTo(a2.x,a2.y);mctx.lineTo(a1.x,a1.y);mctx.stroke();
+  const pg=mctx.createRadialGradient(ox-r*.35,oy-r*.4,r*.15,ox,oy,r);pg.addColorStop(0,'#3d8bd6');pg.addColorStop(.7,'#1d4f8f');pg.addColorStop(1,'#0c2448');
   mctx.fillStyle=pg;mctx.beginPath();mctx.arc(ox,oy,r,0,7);mctx.fill();
-  const a1=pr(P.map(v=>v*1.55)),a2=pr(P.map(v=>-v*1.35));mctx.strokeStyle='#ffd27a';mctx.lineWidth=1.5;mctx.beginPath();mctx.moveTo(a2.x,a2.y);mctx.lineTo(a1.x,a1.y);mctx.stroke();
-  mctx.fillStyle='#ffd27a';mctx.font='11px "IBM Plex Sans KR",sans-serif';mctx.textAlign='center';mctx.fillText('★',a1.x,a1.y-2);
-  const T=[G.R[6],G.R[7],G.R[8]];
-  mctx.strokeStyle='rgba(111,227,255,.35)';mctx.lineWidth=1;mctx.beginPath();
-  for(let i=0;i<=48;i++){const q=pr(ap(rotMat(P,i/48*Math.PI*2),T));i?mctx.lineTo(q.x,q.y):mctx.moveTo(q.x,q.y);}mctx.stroke();
-  const tp=pr(T),L=lvl(),vd=apT(G.R,azalt(L.az,L.alt)),tip=pr(add(T,vd,1.1));
-  mctx.globalAlpha=tp.d>-0.05?1:.4;mctx.strokeStyle='#6fe3ff';mctx.lineWidth=2;mctx.beginPath();mctx.moveTo(tp.x,tp.y);mctx.lineTo(tip.x,tip.y);mctx.stroke();
-  mctx.fillStyle='#6fe3ff';mctx.beginPath();mctx.arc(tp.x,tp.y,4,0,7);mctx.fill();mctx.globalAlpha=1;
-  mctx.fillStyle='#94a0bd';mctx.font='600 11px "IBM Plex Sans KR",sans-serif';mctx.textAlign='left';mctx.fillText('우주에서 본 모습',8,15);
-  mctx.font='10px "IBM Plex Sans KR",sans-serif';mctx.fillText('● 포탑  ◆ 악당(멈춰 있음)',8,h-8);}
+  // 경선·위선: 지구와 함께 돈다(앞면만 그림). 하늘색 경선 = 내가 서 있는 경선
+  for(const ln of GRID.lines){const q=ln.pts.map(v=>pr(apT(G.R,v)));
+    mctx.strokeStyle=ln.me?'rgba(111,227,255,.95)':ln.eq?'rgba(255,255,255,.75)':'rgba(220,235,255,.38)';mctx.lineWidth=ln.me||ln.eq?1.6:1;
+    mctx.beginPath();let on=false;for(const p of q){if(p.d>0){on?mctx.lineTo(p.x,p.y):mctx.moveTo(p.x,p.y);on=true;}else on=false;}mctx.stroke();}
+  // 축의 북쪽 끝(지구 앞으로 나온 부분)과 북극성
+  {const pn=pr(P);if(pn.d>0){mctx.strokeStyle='rgba(255,210,122,.9)';mctx.lineWidth=1.6;mctx.beginPath();mctx.moveTo(pn.x,pn.y);mctx.lineTo(a1.x,a1.y);mctx.stroke();
+    mctx.fillStyle='#ffd27a';mctx.beginPath();mctx.arc(pn.x,pn.y,2.2,0,7);mctx.fill();}}
+  mctx.fillStyle='#ffd27a';mctx.font=`${fs}px "IBM Plex Sans KR",sans-serif`;mctx.textAlign='center';mctx.fillText('★ 북극성',a1.x,a1.y-4);
+  // 자전 방향: 적도 앞쪽을 따라 서→동(북극 위에서 보면 시계 반대 방향 = P 기준 오른손 양의 회전)
+  {const A0=norm(add(V,P,-dot(V,P)));const arc=[];for(let i=0;i<=16;i++)arc.push(pr(apply(rotMat(P,(-40+i*5)*D2R),A0).map(v=>v*1.13)));
+    mctx.strokeStyle='#ffd27a';mctx.lineWidth=2.2;mctx.beginPath();arc.forEach((p,i)=>i?mctx.lineTo(p.x,p.y):mctx.moveTo(p.x,p.y));mctx.stroke();
+    const e=arc[16],b=arc[14],ang=Math.atan2(e.y-b.y,e.x-b.x),hs=fs*.7;mctx.fillStyle='#ffd27a';mctx.beginPath();mctx.moveTo(e.x+Math.cos(ang)*hs*.4,e.y+Math.sin(ang)*hs*.4);
+    mctx.lineTo(e.x-Math.cos(ang-.5)*hs,e.y-Math.sin(ang-.5)*hs);mctx.lineTo(e.x-Math.cos(ang+.5)*hs,e.y-Math.sin(ang+.5)*hs);mctx.closePath();mctx.fill();
+    mctx.font=`600 ${fs}px "IBM Plex Sans KR",sans-serif`;mctx.textAlign='left';mctx.fillText('자전(서→동)',Math.min(e.x+4,w-fs*6.5),e.y+fs*1.3);}
+  // 나(포탑)의 지평면과 보는 방향: 지구에 붙어 함께 돈다
+  const tp=pr(T),vis=tp.d>-0.15,Ei=apT(G.R,[1,0,0]),Ni=apT(G.R,[0,1,0]);
+  mctx.globalAlpha=vis?1:.35;
+  mctx.beginPath();for(let i=0;i<=32;i++){const t=i/32*Math.PI*2,q=pr(add(add(T,Ei,.6*Math.cos(t)),Ni,.6*Math.sin(t)));i?mctx.lineTo(q.x,q.y):mctx.moveTo(q.x,q.y);}
+  mctx.closePath();mctx.fillStyle='rgba(120,230,150,.28)';mctx.fill();mctx.strokeStyle='rgba(140,240,170,.9)';mctx.lineWidth=1.2;mctx.stroke();
+  const L=lvl(),vd=apT(G.R,azalt(L.az,L.alt)),tip=pr(add(T,vd,1.05));
+  mctx.strokeStyle='#6fe3ff';mctx.lineWidth=2.2;mctx.beginPath();mctx.moveTo(tp.x,tp.y);mctx.lineTo(tip.x,tip.y);mctx.stroke();
+  mctx.fillStyle='#6fe3ff';mctx.beginPath();mctx.arc(tip.x,tip.y,2.2,0,7);mctx.fill();
+  mctx.fillStyle='#fff';mctx.strokeStyle='#0b1a33';mctx.lineWidth=2;mctx.beginPath();mctx.arc(tp.x,tp.y,fs*.42,0,7);mctx.fill();mctx.stroke();
+  mctx.font=`700 ${fs}px "IBM Plex Sans KR",sans-serif`;mctx.textAlign='center';mctx.fillStyle='#fff';mctx.fillText('나',tp.x,tp.y-fs*.7);
+  mctx.globalAlpha=1;
+  drawFar(true);
+  // 제목과 범례
+  mctx.textAlign='left';mctx.fillStyle='#cfd8ee';mctx.font=`600 ${fs*1.1}px "IBM Plex Sans KR",sans-serif`;mctx.fillText('우주에서 본 지구',8,fs*1.5);
+  mctx.fillStyle='#94a0bd';mctx.font=`${fs*.85}px "IBM Plex Sans KR",sans-serif`;
+  mctx.fillText('지구가 돌아요 · 악당과 별은 멈춰 있어요',8,h-fs*1.5);
+  mctx.fillText('초록 판 = 내 지평면  ◆ 보임  ◇ 지평선 아래',8,h-fs*.4);}
 
 /* ---------- 교실 접속 모드 (vector-soccer 와 같은 방식: QR → 학번·이름 → 서버) ----------
    게임 물리는 이 태블릿에서 계산한다. 서버는 판 시간(시작·멈춤·끝)과 점수·순위만 맡는다.

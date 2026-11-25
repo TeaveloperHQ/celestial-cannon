@@ -1,4 +1,4 @@
-module planet-turret
+module celestial-cannon
 
 go 1.26
 

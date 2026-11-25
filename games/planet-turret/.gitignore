@@ -1,5 +1,0 @@
-/dist/
-*.exe
-*.log
-# 런타임 데이터(교사 PC 로컬)
-/planet-turret-results/
